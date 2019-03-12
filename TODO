@@ -3,6 +3,14 @@ I. Revise/refactor
       1. p3b: Go through execution times of cells in various cells and replace dictionary comprehensions w/ progress reports 
           a. w/ joblib-parallelized generator expresions.
           b. and add checks for whether the file already exists that the dictionary in question will be exported to.
+      2. p4a
+      3. p4bnt2
+          a. fix incorrect probability calculations (source/prefix probabilities) and exports
+          b. cousin calculations should /follow/ 3.1.7.1.
+          c. Do timing estimates for 
+              - pXhat0f_X0k_pxt for 200 samples on wittgenstein/cpu
+              - pXhat0f_X0k_pxt for 200 samples on wittgenstein/gpu
+              - pXhat0f_X0k_pxt for 50 samples on wittgenstein/gpu
     B. Papermill + Parameters
       1. p2a, p3a (and to a lesser extent p3b) take parameters that affect their behavior (viz. what data they look at and what they do with it). Edit them for papermill compatibility so this can be done via CLI.
     C. Reaching towards Buckeye, CELEX, and Dutch
@@ -20,8 +28,4 @@ I. Revise/refactor
               - currently this fails in \S 5.6.1 because 'l0' in uniphone_dist has a norm of 0.5
           c. IPhOD/stressed/0
           d. IPhOD/stressed/001
-      2. p4a
-      3. p4bnt2
-          a. fix incorrect probability calculations (source/prefix probabilities) and exports
-          b. cousin calculations should /follow/ 3.1.7.1.
-          c. 
+      2. p3a should interpolate w/ uniphone est.
