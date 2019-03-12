@@ -31,7 +31,26 @@ def transpose(d, row_keys, col_keys):
     return {row_key:{col_key:d[col_key][row_key]
                      for col_key in col_keys if col_key in d and row_key in d[col_key]}
             for row_key in row_keys}
-    
+
+def project_dict(the_dict, keys_to_keep):
+    new_dict = {key:the_dict[key] for key in the_dict.keys() if key in keys_to_keep}
+    return new_dict
+
+def edit_dict(the_dict, the_key, the_new_value):
+    '''
+    Composable (because it returns a value) but stateful(= in-place) dictionary update.
+    '''
+    the_dict.update({the_key: the_new_value})
+    return the_dict
+
+def modify_dict(the_dict, the_key, the_new_value):
+    '''
+    Composable and (naively-implemented) non-mutating dictionary update.
+    '''
+    new_dict = {k:the_dict[k] for k in the_dict}
+    new_dict.update({the_key: the_new_value})
+    return new_dict
+
 def filter_dict(d, cond):
     return {k:d[k] for k in d if cond(k, d[k])}
 
