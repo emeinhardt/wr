@@ -17,6 +17,11 @@ I. Revise/refactor
           b. unaligned/stressed/001
           a. Hammond/stressed/0
           b. Hammond/stressed/001
-                - running
+              - currently this fails in \S 5.6.1 because 'l0' in uniphone_dist has a norm of 0.5
           c. IPhOD/stressed/0
           d. IPhOD/stressed/001
+      2. p4a
+      3. p4bnt2
+          a. fix incorrect probability calculations (source/prefix probabilities) and exports
+          b. cousin calculations should /follow/ 3.1.7.1.
+          c. 
