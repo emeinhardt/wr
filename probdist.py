@@ -6,7 +6,9 @@ from itertools import product, accumulate
 from functools import reduce
 import operator
 from bisect import bisect
-from math import log2, isclose
+# from math import log2, isclose
+from math import isclose
+import math
 from boilerplate import *
 import numpy as np
 
@@ -218,21 +220,118 @@ def trimToSupport(dist):
     else:
         return ProbDist({e:dist[e] for e in support(dist)})
 
+def marginal_np(p, prior):
+    '''
+    Given a 2D m x n numpy array p representing a family of m conditional 
+    distributions {p(Y|x_j)} over n outcomes {x_j} and an array representing 
+    a prior p(X) over X = {x_j}, this returns the marginal distribution p(Y).
+    '''
+    return np.dot(p, prior)
+    
+def P_marginal_cd(e, cd, prior):
+    '''
+    Given a dictionary of ProbDists cd representing a family of 
+    conditional distributions {p(Y|x_i)}, a prior on the 
+    conditions p(X), and an event e, this calcualtes the marginal
+    probability p(e).
+    '''
+    assert uniformOutcomes(cd)
+    badConditions = {c for c in conditions(cd) if c not in prior}
+    assert len(badConditions) == 0, "Some conditioning events are not in the sample space of the prior: {0}".format(badConditions)
+    conditionNorm = float(sum(prior[c] for c in cd))
+    assert np.isclose(conditionNorm, 1.0), "Sum of probabilities (according to the prior) of conditioning events in cd must be 1, but instead = {0}".format(conditionNorm)
+    return sum(prior[c] * P(e, cd[c])
+               for c in cd)
+    
+def MarginalProbDist(cd, prior):
+    '''
+    Given a dictionary of ProbDists cd representing a family of 
+    conditional distributions {p(Y|x_i)} and a prior on the 
+    conditions p(X), this returns a ProbDist representing the 
+    marginal distribution P(Y).
+    '''
+    assert uniformOutcomes(cd)
+    badConditions = {c for c in conditions(cd) if c not in prior}
+    assert len(badConditions) == 0, "Some conditioning events are not in the sample space of the prior: {0}".format(badConditions)
+    conditionNorm = float(sum(prior[c] for c in cd))
+    assert np.isclose(conditionNorm, 1.0), "Sum of probabilities (according to the prior) of conditioning events in cd must be 1, but instead = {0}".format(conditionNorm)
+    
+    O = outcomes(cd)
+    return ProbDist({o:sum(prior[c] * cd[c][o]
+                           for c in cd)
+                     for o in O})
 
 # from math import log2
 
 def log(x):
-    if x == 0.0:
-        return 0.0
-    return log2(x)
+    if type(x) == type(Fraction(1,2)):
+#         return np.log2(float(x))
+        return math.log2(x)
+#     if x == 0.0:
+#         return 0.0
+    return np.log2(x)
+#     return math.log2(x)
 
 def h_prime(prob):
     return -1.0 * log(prob)
+
+def surprisals(space):
+    '''
+    Given a ProbDist p(X), returns a dictionary mapping
+    each outcome x to h(p(X)).
+    '''
+    return {o:h_prime(space[o]) for o in space}
 
 def h(event, space):
     p = P(event, space)
 #     p = space[event]
     return -1.0 * log(p)
+
+def prod_prime(iterable):
+    return reduce(mul_prime, iterable, 1)
+
+def mul_prime(a, b):
+    if type(a) == type(Fraction(1,2)):
+        a = float(a)
+    if type(b) == type(Fraction(1,2)):
+        b = float(b)
+    if (np.isclose(a, 0.0) and abs(b) == np.infty) or (abs(a) == np.infty and np.isclose(b, 0.0)):
+        return 0.0
+    return a * b
+
+def couldBeAProbability(p):
+    return 0.0 <= p and p <= 1.0
+
+def isNormalized_np(p):
+    return np.isclose(p.sum(), 1.0)
+
+def is_a_distribution_np(p):
+    return isNormalized_np(p) and all(list(map(couldBeAProbability, p)))
+
+def H_np(p, prior=None, paranoid=False):
+    '''
+    Given a numpy array p representing a probability distribition p(X), this
+    returns the Shannon entropy of the distribution H(X).
+    
+    Given a 2D m x n numpy array p representing a family of m conditional 
+    distributions {p(Y|x_j)} over n outcomes {x_j}, this retuns the m conditional
+    entropies as an array.
+    
+    Given a 2D m x n numpy array p representing a family of m conditional 
+    distributions {p(Y|x_j)} over n outcomes {x_j} and an array representing 
+    a prior p(X) over X = {x_j}, this returns the expected conditional entropy
+    H(Y|X).
+    '''
+    if p.squeeze().ndim == 1:
+        if paranoid:
+            badValues = [(i, p_i) for i, p_i in enumerate(p) if not couldBeAProbability(p_i)]
+            assert len(badValues) == 0, "{0} cannot represent probabilities".format(badValues)
+            assert isNormalized_np(p), "Probabilities do not sum to 1.\n  Sum: {0}\n  Vector: {1}".format(np.sum(p), p)
+        return np.nansum(p * (-1.0 * np.log2(p)))
+    if prior is None:
+        return np.apply_along_axis(H_np, 0, p)
+    return np.dot( np.apply_along_axis(H_np, 0, p), prior )
+    
 
 def H(space, prior = None):
     """
@@ -249,7 +348,8 @@ def H(space, prior = None):
         prior_probs = tuple([P(event, prior) for event in sorted(space)])
         entropies = tuple([H(space[event]) for event in sorted(space)])
         terms = tuple(zip(prior_probs, entropies))
-        prods = tuple(map(prod, terms))
+#         prods = tuple(map(prod, terms))
+        prods = tuple(map(prod_prime, terms))
         s = sum(prods)
         return s
     else:
@@ -257,7 +357,8 @@ def H(space, prior = None):
     #     probs = tuple([space[event] for event in sorted(space)])
         surprisals = tuple([h(event, space) for event in sorted(space)])
         terms = tuple(zip(probs, surprisals))
-        prods = tuple(map(prod, terms))
+#         prods = tuple(map(prod, terms))
+        prods = tuple(map(prod_prime, terms))
         s = sum(prods)
         return s
 
@@ -296,7 +397,8 @@ def DKL(p, q, rel_tol=1e-09):
     pointwiseDivergences = tuple([pDKL(event, p, q) for event in p])
     assert len(probs) == len(pointwiseDivergences)
     terms = tuple(zip(probs, pointwiseDivergences))
-    prods = tuple(map(prod, terms))
+#     prods = tuple(map(prod, terms))
+    prods = tuple(map(prod_prime, terms))
     s = sum(prods)
     
     #math.isclose does NOT do what it ought to...
