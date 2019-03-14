@@ -235,7 +235,9 @@ def P_marginal_cd(e, cd, prior):
     conditions p(X), and an event e, this calcualtes the marginal
     probability p(e).
     '''
-    assert uniformOutcomes(cd)
+    uo = uniformOutcomes(cd)
+    if uo is not True:
+        raise Exception('Outcomes are not uniform: {0}'.format(uo))
     badConditions = {c for c in conditions(cd) if c not in prior}
     assert len(badConditions) == 0, "Some conditioning events are not in the sample space of the prior: {0}".format(badConditions)
     conditionNorm = float(sum(prior[c] for c in cd))
@@ -250,7 +252,9 @@ def MarginalProbDist(cd, prior):
     conditions p(X), this returns a ProbDist representing the 
     marginal distribution P(Y).
     '''
-    assert uniformOutcomes(cd)
+    uo = uniformOutcomes(cd)
+    if uo is not True:
+        raise Exception('Outcomes are not uniform: {0}'.format(uo))
     badConditions = {c for c in conditions(cd) if c not in prior}
     assert len(badConditions) == 0, "Some conditioning events are not in the sample space of the prior: {0}".format(badConditions)
     conditionNorm = float(sum(prior[c] for c in cd))
