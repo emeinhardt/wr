@@ -220,6 +220,29 @@ def trimToSupport(dist):
     else:
         return ProbDist({e:dist[e] for e in support(dist)})
 
+def expectation(f, p):
+    '''
+    Given a ProbDist p :: O ⟶ [0,1] and a mapping f :: O ⟶ R, this returns 
+    the expected value of f with respect to p.
+    
+    f can be a dictionary, ProbDist, or function. 
+    '''
+    if type(f) == type(dict()) or type(f) == type(Uniform({0,1})):
+        lookup = lambda o: f[o]
+    if callable(f):
+        lookup = lambda o: f(o)
+    return sum({p[o] * lookup(f, o)
+                for o in p})
+
+def expectation_np(f, p):
+    '''
+    Given an np array f that represents a distribution over a finite set of outcomes {O_i} and
+    an np array p that represents another distribution over the same set of outcomes,
+    this returns the expectation of f wrt p.
+    '''
+    return np.dot(f, p)
+    
+
 def marginal_np(p, prior):
     '''
     Given a 2D m x n numpy array p representing a family of m conditional 
@@ -232,18 +255,18 @@ def P_marginal_cd(e, cd, prior):
     '''
     Given a dictionary of ProbDists cd representing a family of 
     conditional distributions {p(Y|x_i)}, a prior on the 
-    conditions p(X), and an event e, this calcualtes the marginal
+    conditions p(X), and an event e, this calculates the marginal
     probability p(e).
     '''
-    uo = uniformOutcomes(cd)
-    if uo is not True:
-        raise Exception('Outcomes are not uniform: {0}'.format(uo))
-    badConditions = {c for c in conditions(cd) if c not in prior}
-    assert len(badConditions) == 0, "Some conditioning events are not in the sample space of the prior: {0}".format(badConditions)
-    conditionNorm = float(sum(prior[c] for c in cd))
-    assert np.isclose(conditionNorm, 1.0), "Sum of probabilities (according to the prior) of conditioning events in cd must be 1, but instead = {0}".format(conditionNorm)
+#     uo = uniformOutcomes(cd)
+#     if uo is not True:
+#         raise Exception('Outcomes are not uniform: {0}'.format(uo))
+#     badConditions = {c for c in conditions(cd) if c not in prior}
+#     assert len(badConditions) == 0, "Some conditioning events are not in the sample space of the prior: {0}".format(badConditions)
+#     conditionNorm = float(sum(prior[c] for c in cd))
+#     assert np.isclose(conditionNorm, 1.0), "Sum of probabilities (according to the prior) of conditioning events in cd must be 1, but instead = {0}".format(conditionNorm)
     return sum(prior[c] * P(e, cd[c])
-               for c in cd)
+               for c in prior)
     
 def MarginalProbDist(cd, prior):
     '''
@@ -252,17 +275,17 @@ def MarginalProbDist(cd, prior):
     conditions p(X), this returns a ProbDist representing the 
     marginal distribution P(Y).
     '''
-    uo = uniformOutcomes(cd)
-    if uo is not True:
-        raise Exception('Outcomes are not uniform: {0}'.format(uo))
-    badConditions = {c for c in conditions(cd) if c not in prior}
-    assert len(badConditions) == 0, "Some conditioning events are not in the sample space of the prior: {0}".format(badConditions)
-    conditionNorm = float(sum(prior[c] for c in cd))
-    assert np.isclose(conditionNorm, 1.0), "Sum of probabilities (according to the prior) of conditioning events in cd must be 1, but instead = {0}".format(conditionNorm)
+#     uo = uniformOutcomes(cd)
+#     if uo is not True:
+#         raise Exception('Outcomes are not uniform: {0}'.format(uo))
+#     badConditions = {c for c in conditions(cd) if c not in prior}
+#     assert len(badConditions) == 0, "Some conditioning events are not in the sample space of the prior: {0}".format(badConditions)
+#     conditionNorm = float(sum(prior[c] for c in cd))
+#     assert np.isclose(conditionNorm, 1.0), "Sum of probabilities (according to the prior) of conditioning events in cd must be 1, but instead = {0}".format(conditionNorm)
     
     O = outcomes(cd)
     return ProbDist({o:sum(prior[c] * cd[c][o]
-                           for c in cd)
+                           for c in prior)
                      for o in O})
 
 # from math import log2

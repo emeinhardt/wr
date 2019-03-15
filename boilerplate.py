@@ -57,6 +57,9 @@ def filter_dict(d, cond):
 gtZero = lambda k,v: v > 0.0
 
 def mapValues(f, d):
+    '''
+    Maps k ⟶ f(d[k)) for each k in d.
+    '''
     return {k:f(d[k]) for k in d}
 
 
@@ -213,6 +216,115 @@ def randomPrefixFromTriphones(triphones, l, hasLeftEdge=True):
         raise Exception("Currently unsupported.")
 #         return foo([choice(wordInitialTriphones)
 
+def replaceXj(s, j, x):
+    s_t = ds2t(s)
+    s_l = list(s_t)
+    s_l[j] = x
+    s_t = tuple(s_l)
+    return t2ds(s_t)
+
+def removeXj(s, j):
+    return replaceXj(s, j, '_')
+
+def removeXi(x0k):
+    l = len(ds2t(x0k))
+    return removeXj(x0k, l-2)
+
+def getPrefixes(s):
+    if type(s) == str:
+        sAsTup = ds2t(s)
+    elif type(s) == tuple:
+        sAsTup = s
+    else:
+        raise Exception('s must be a string or a tuple.')
+    prefsAsTuples = set(sAsTup[0:i] for i in range(1, len(sAsTup)+1))
+    return set(map(t2ds, prefsAsTuples))
+
+def getProperPrefixes(s):
+    Ps = getPrefixes(s)
+    return {p for p in Ps if p[-1] != rightEdge}
+
+def isProperPrefix(word, prefix):
+    PPs = getProperPrefixes(word)
+    return prefix in PPs
+
+def hasAsPrefix(word, prefix):
+    if type(prefix) == str:
+        prefix_t = ds2t(prefix)
+    elif type(prefix) == tuple:
+        prefix_t = prefix
+    else:
+        raise Exception('prefix should be a dotted string or a tuple.')
+    if type(word) == str:
+        word_t = ds2t(word)
+    elif type(word) == tuple:
+        word_t = word
+    else:
+        raise Exception('word should be a dotted string or a tuple.')
+    
+    l = len(prefix_t)
+    return word_t[0:l] == prefix_t
+
+
+
+def d_s(x, y):
+    '''
+    Hamming distance between symbol x and symbol y.
+    '''
+    return x != y
+
+def d_h(u, v):
+    '''
+    Hamming distance between strings u and v.
+    '''
+    u_t = ds2t(u)
+    v_t = ds2t(v)
+    if len(u_t) != len(v_t):
+        return np.infty
+    return sum(tuple(starmap(d_s, zip(u_t,v_t))))
+
+def hamming_neighbors(s, W):
+    '''
+    Returns the strings of W that are exactly Hamming distance 1 from s.
+    '''
+    return h_sphere(1, s, W)
+
+def h_sphere(k, s, W, exclude_s = False):
+    '''
+    Returns the strings of W that are exactly Hamming distance k from s.
+    '''
+    sphere = {v for v in W if d_h(s,v) == k}
+    if exclude_s:
+        return sphere - {s}
+    return sphere
+
+def h_neighborhood(k, s, W, exclude_s = False):
+    '''
+    Returns all strings of W whose Hamming distance from s is <= k.
+    '''
+    N = {v for v in W if d_h(s,v) <= k}
+    if exclude_s:
+        return N - {s}
+    return N
+
+def getSpheres(s, W):
+    '''
+    Returns a mapping from [0,len(s)-1] to the corresponding 
+    Hamming spheres of s in W.
+    '''
+    D = range(len(ds2t(s)))
+    spheres = {d:h_sphere(d, s, W) for d in D}
+    return spheres
+
+def neighborhood_measures(k, s, W, M, exclude_s = False):
+    '''
+    Applies a measure M (dictionary) to each of the k-neighbors
+    of s in W.
+    '''
+    N = h_neighborhood(k, s, W, exclude_s)
+    Ms = {v:M[v] for v in N}
+    return Ms
+
 
 
 # from os.path import isfile
@@ -284,6 +396,50 @@ def importNphoneAnalysis(N, which_align):
             print('Importing: ' + analysis_fn)
             analysis[each_licit][each_stress_each_diph] = importSeqs(analysis_fn)
     return analysis
+
+
+
+def rev(t):
+    return tuple(reversed(t))
+
+def seqsToIndexMap(seqs):
+    sorted_seqs = sorted(seqs)
+    myIndexMap = dict(map(rev, enumerate(sorted_seqs)))
+    return myIndexMap
+
+def indexToSeqMap(seqs):
+    sorted_seqs = sorted(seqs)
+    mySeqMap = dict(enumerate(sorted_seqs))
+    return mySeqMap
+
+def areInverses(dictA, dictB):
+    return all(dictB[dictA[k]] == k for k in dictA)
+
+def seqMapToOneHots(seqMap):
+    n = len(seqMap.keys())
+    one_hots = np.zeros((n,n))
+    for (seq, idx) in seqMap.items():
+        one_hots[idx][idx] = 1.0
+    return one_hots
+
+def seqToOneHot(seq, seqMap, one_hots):
+    return one_hots[seqMap[seq]]
+
+def seqsToOneHotMap(seqs):
+    seqMap = seqsToIndexMap(seqs)
+    one_hots = seqMapToOneHots(seqMap)
+    return {seq:one_hots[seqMap[seq]]
+            for seq in seqMap}
+
+def oneHotToSeqMap(seqs):
+    sorted_seqs = sorted(seqs)
+    seqsToOHmap = seqsToOneHotMap(seqs)
+    seqsToOHmap_t = mapValues(tuple, seqsToOHmap)
+    OHtoSeqs = dict(map(rev, seqsToOHmap_t.items()))
+    def OHtoSeq(OH_vector):
+        OH_t = tuple(OH_vector)
+        return OHtoSeqs[OH_t]
+    return OHtoSeq
 
 
 
