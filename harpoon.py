@@ -172,8 +172,9 @@ def dict_to_relation(a_dict):
     Returns a tuple representing the *relation* defined by the function
     defined by a_dict.
     '''
-    return tuple(map(lambda kv_pair: kv_pair[0] + (kv_pair[1],),
-                     tuple(a_dict.items())))
+#     return tuple(map(lambda kv_pair: kv_pair[0] + (kv_pair[1],),
+#                      tuple(a_dict.items())))
+    return tuple(map(tuple, a_dict.items()))
 
 @conserve_frozendicts
 def curry_dict(a_dict):

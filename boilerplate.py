@@ -27,10 +27,28 @@ def testRandomKey(a_dict, printKey = True, printVal = True):
     return {'key': randKey, 'val': a_dict[randKey]}
 
 
-def transpose(d, row_keys, col_keys):
-    return {row_key:{col_key:d[col_key][row_key]
-                     for col_key in col_keys if col_key in d and row_key in d[col_key]}
-            for row_key in row_keys}
+def transpose(d, inner_keys, outer_keys):
+    '''
+    Let 
+        As = {'a0', 'a1'}
+        Bs = {'b0', 'b1'}
+        d = {'a0': {'b0': 0, 'b1': 1}, 
+             'a1': {'b0': 0, 'b1': 1}}
+    Then
+        transpose(d, Bs, As) = 
+        {'b0': {'a1': 0, 'a0': 0}, 'b1': {'a1': 1, 'a0': 1}}
+        
+    Alternative schematization: Let
+        f: A ⟶ B = {'a0':'b0','a1':'b1'}
+        g: B ⟶ C = {'b0':0,'b1':1}
+        d: A ⟶ B ⟶ C = g ⚬ f
+    Then 
+        d' = transpose(d, Bs, As) = 
+        d': B ⟶ A ⟶ C = flip(g ⚬ f)
+    '''
+    return {inner_key:{outer_key:d[outer_key][inner_key]
+                     for outer_key in outer_keys if outer_key in d and inner_key in d[outer_key]}
+            for inner_key in inner_keys}
 
 def project_dict(the_dict, keys_to_keep):
     new_dict = {key:the_dict[key] for key in the_dict.keys() if key in keys_to_keep}
