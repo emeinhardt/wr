@@ -19,6 +19,7 @@ ehthumbs.db
 Thumbs.db
 
 *.csv
+*.tsv
 *.dat
 *.npy
 *.json
