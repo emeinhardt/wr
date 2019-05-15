@@ -33,6 +33,21 @@ def lexiconToInventory(DSs):
 
 # def 
 
+
+def subInDS(dottedString, to_replace, replacement):
+    '''
+    Replace each instance of symbol 'to_replace' 
+    with 'replacement' symbol in 'dottedString'.
+    '''
+    old_symbol_tuple = dottedStringToTuple( dottedString )
+
+    replacer = lambda symb: symb if symb != to_replace else replacement
+    new_symbol_tuple = tuple( map(replacer, old_symbol_tuple) )
+
+    dottedSymbols = tupleToDottedString( new_symbol_tuple ) 
+    return dottedSymbols
+
+
 def dsToKfactors(k, ds):
     seq = ds2t(ds)
     l = len(seq)
