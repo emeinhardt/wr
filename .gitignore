@@ -28,7 +28,8 @@ Thumbs.db
 *.pdf
 *.arpa
 *.mmap
-
+*.hV_C
+*.pV_C
 *.png
 
 __MACOSX/
