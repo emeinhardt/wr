@@ -22,9 +22,12 @@ Thumbs.db
 *.tsv
 *.dat
 *.npy
+*.npy.normed
 *.json
 *.txt
 *.pdf
+*.arpa
+*.mmap
 
 *.png
 
