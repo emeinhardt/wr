@@ -470,6 +470,9 @@ def condDistsAsProbDists(condDist):
 def condProbDistAsDicts(condDistFamily):
     return {i:dict(condDistFamily[i]) for i in condDistFamily}
 
+def condProbDistAsDicts_for_export(condDistFamily):
+    return {i:mapValues(float, dict(condDistFamily[i])) for i in condDistFamily}
+
 def distToNP(pO):
     pO_np = np.array([float(pO[o]) for o in sorted(pO.keys())])
     return pO_np
