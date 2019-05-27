@@ -363,6 +363,13 @@ def loadTSV_as_dictlist(fp):
             rows.append(row)
     return rows
 
+def saveDictList_as_TSV(fp, dl, fields):
+    with open(fp, 'w', newline='\n') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fields, delimiter='\t', quoting=csv.QUOTE_NONE, quotechar='@')
+        
+        writer.writeheader()
+        writer.writerows(dl)
+
 def importSeqs(seq_fn, f=None):
     if f is None:
         f = set
