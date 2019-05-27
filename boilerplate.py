@@ -352,12 +352,25 @@ def toOrth_h(phonword, removeEdgeSymbols = True, hammond_fn = 'Hammond_newdic_IP
 def exists(fname):
     return isfile(fname)
 
-def importSeqs(seq_fn):
+def loadTSV_as_dictlist(fp):
+    rows = []
+
+    with open(fp) as csvfile:
+        #quoting and quotechar args here are for dealing with the CMU dictionary
+        my_reader = csv.DictReader(csvfile, delimiter='\t', quoting=csv.QUOTE_NONE, quotechar='@')
+        for row in my_reader:
+            #print(row)
+            rows.append(row)
+    return rows
+
+def importSeqs(seq_fn, f=None):
+    if f is None:
+        f = set
     phoneSeqsAsStr = []
     with open(seq_fn, 'r') as the_file:
         for row in the_file:
             phoneSeqsAsStr.append(row.rstrip('\r\n'))
-    return set(phoneSeqsAsStr)
+    return f(phoneSeqsAsStr)
 
 def exportSeqs(seq_fn, seqs):
     with open(seq_fn, 'w') as the_file:
