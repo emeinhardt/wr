@@ -20,6 +20,19 @@ def dottedStringToTuple(s):
 t2ds = tupleToDottedString
 ds2t = dottedStringToTuple
 
+def padInputSequenceWithBoundaries(inputSeq):
+    temp = list(dottedStringToTuple(inputSeq))
+    temp = tuple([leftEdge] + temp + [rightEdge])
+    return tupleToDottedString(temp)
+
+def trimBoundariesFromSequence(seq):
+    temp = list(dottedStringToTuple(seq))
+    if temp[0] == leftEdge:
+        temp = temp[1:]
+    if temp[-1] == rightEdge:
+        temp = temp[:-1]
+    return tupleToDottedString(tuple(temp))
+
 
 def dsToInventory(s):
     s_t = ds2t(s)
@@ -212,6 +225,9 @@ def hasAsPrefix(word, prefix):
     l = len(prefix_t)
     return word_t[0:l] == prefix_t
 
+def wordsWithPrefix(p, Ws):
+    return {w for w in Ws if hasAsPrefix(w, p)}
+
 
 
 def d_s(x, y):
@@ -271,3 +287,58 @@ def neighborhood_measures(k, s, W, M, exclude_s = False):
     N = h_neighborhood(k, s, W, exclude_s)
     Ms = {v:M[v] for v in N}
     return Ms
+
+
+
+def are_k_cousins(prefix, wordform, k, prefixes, exactlyK = True):
+    if exactlyK:
+        k_cousins = h_sphere(k, prefix, prefixes)
+    else:
+        k_cousins = h_neighborhood(k, prefix, prefixes)
+    prefixesOfw = getPrefixes(wordform)
+    return any(p in k_cousins for p in prefixesOfw)
+
+def get_k_cousins(prefix, k, W, prefixes, exactlyK = True, asIDs = False):
+    if exactlyK:
+        k_cousins = h_sphere(k, prefix, prefixes)
+    else:
+        k_cousins = h_neighborhood(k, prefix, prefixes)
+    if not asIDs:
+        return {w for w in Ws if any(p in k_cousins for p in getPrefixes(wordform))}
+    return {X0fmap[w] for w in Ws if any(p in k_cousins for p in getPrefixes(wordform))}
+
+def count_k_cousins(prefix, k, W, prefixes, exactlyK = True):
+    if exactlyK:
+        k_cousins = h_sphere(k, prefix, prefixes)
+    else:
+        k_cousins = h_neighborhood(k, prefix, prefixes)
+    return len({w for w in Ws if any(p in k_cousins for p in getPrefixes(wordform))})
+
+
+
+
+def wordformsOfLength(l, Ws, includingEdges = False):
+    #Ws assumed to have word edges
+    if includingEdges:
+        return {w for w in Ws if len(ds2t(w)) == l}
+    return {w for w in Ws if len(ds2t(w)) == l + 2}
+
+def wordformsAtLeastLlong(l, Ws, includingEdges = False):
+    #Ws assumed to have word edges
+    maxL = len( sorted(list(Ws), key=len)[-1] )
+    if includingEdges:
+#         maxL = max(wordlengthsInclEdges)
+        return union([wordformsOfLength(eachl, includingEdges) for eachl in range(l, maxL+1)])
+    if not includingEdges:
+#         maxL = max(wordlengthsNotIncludingEdges)
+        maxL = maxL - 2
+        return union([wordformsOfLength(eachl, includingEdges) for eachl in range(l, maxL+1)])
+    
+def getWordformsWithx(x, Ws):
+    return {w for w in Ws if x in ds2t(w)}
+
+def wordsWhereXiIs(x, i, Ws):
+#     wordsWithX = xToWs[x]
+    wordsWithX = getWordformsWithx(x, Ws)
+    ws = set(map(ds2t, wordsWithX))
+    return {t2ds(w) for w in ws if i <= len(w) - 1 and w[i] == x}
