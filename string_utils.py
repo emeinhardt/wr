@@ -1,5 +1,6 @@
 from functools import reduce
-from itertools import takewhile, product
+from itertools import takewhile, product, starmap
+import numpy as np
 
 def union(Ss):
     return reduce(set.union, Ss)
@@ -298,21 +299,19 @@ def are_k_cousins(prefix, wordform, k, prefixes, exactlyK = True):
     prefixesOfw = getPrefixes(wordform)
     return any(p in k_cousins for p in prefixesOfw)
 
-def get_k_cousins(prefix, k, W, prefixes, exactlyK = True, asIDs = False):
+def get_k_cousins(prefix, k, Ws, prefixes, exactlyK = True):
     if exactlyK:
         k_cousins = h_sphere(k, prefix, prefixes)
     else:
         k_cousins = h_neighborhood(k, prefix, prefixes)
-    if not asIDs:
-        return {w for w in Ws if any(p in k_cousins for p in getPrefixes(wordform))}
-    return {X0fmap[w] for w in Ws if any(p in k_cousins for p in getPrefixes(wordform))}
+    return {w for w in Ws if any(p in k_cousins for p in getPrefixes(w))}
 
-def count_k_cousins(prefix, k, W, prefixes, exactlyK = True):
+def count_k_cousins(prefix, k, Ws, prefixes, exactlyK = True):
     if exactlyK:
         k_cousins = h_sphere(k, prefix, prefixes)
     else:
         k_cousins = h_neighborhood(k, prefix, prefixes)
-    return len({w for w in Ws if any(p in k_cousins for p in getPrefixes(wordform))})
+    return len({w for w in Ws if any(p in k_cousins for p in getPrefixes(w))})
 
 
 
