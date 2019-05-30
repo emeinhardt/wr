@@ -2,7 +2,8 @@ from functools import reduce
 from random import choice
 from itertools import takewhile, product
 import json, codecs, csv
-from os.path import isfile
+import os
+# from os.path import isfile
 from time import localtime, strftime
 from joblib import Parallel, delayed
 
@@ -346,11 +347,14 @@ def toOrth_h(phonword, removeEdgeSymbols = True, hammond_fn = 'Hammond_newdic_IP
 #     Ms = {v:M[v] for v in N}
 #     return Ms
 
-
+def ensure_dir_exists(dir_path):
+    if dir_path != '' and not os.path.exists(dir_path):
+        print(f"Making directory '{dir_path}'")
+        os.makedirs(dir_path)
 
 # from os.path import isfile
 def exists(fname):
-    return isfile(fname)
+    return os.path.isfile(fname)
 
 def loadTSV_as_dictlist(fp):
     rows = []
