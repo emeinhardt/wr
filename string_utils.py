@@ -1,6 +1,7 @@
 from functools import reduce
 from itertools import takewhile, product, starmap
 import numpy as np
+from random import choice
 
 def union(Ss):
     return reduce(set.union, Ss)
