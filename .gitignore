@@ -32,6 +32,7 @@ Thumbs.db
 *.pV_C
 *.png
 *.npz
+.nfs*
 
 __MACOSX/
 __pycache__/
