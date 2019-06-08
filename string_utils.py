@@ -328,11 +328,11 @@ def wordformsAtLeastLlong(l, Ws, includingEdges = False):
     maxL = len( sorted(list(Ws), key=len)[-1] )
     if includingEdges:
 #         maxL = max(wordlengthsInclEdges)
-        return union([wordformsOfLength(eachl, includingEdges) for eachl in range(l, maxL+1)])
+        return union([wordformsOfLength(eachl, Ws, includingEdges) for eachl in range(l, maxL+1)])
     if not includingEdges:
 #         maxL = max(wordlengthsNotIncludingEdges)
         maxL = maxL - 2
-        return union([wordformsOfLength(eachl, includingEdges) for eachl in range(l, maxL+1)])
+        return union([wordformsOfLength(eachl, Ws, includingEdges) for eachl in range(l, maxL+1)])
     
 def getWordformsWithx(x, Ws):
     return {w for w in Ws if x in ds2t(w)}
