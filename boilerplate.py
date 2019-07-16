@@ -397,6 +397,16 @@ def importDict(fn):
         d_in = json.loads(data_file.read())
     return d_in
 
+def exportMatrixMetadata(md_fp, matrix_fp, matrix, dim_md, step_name, nb_name, other_md):
+    md = {'matrix fp':matrix_fp,
+          'matrix shape':matrix.shape,
+          'Produced in step':step_name,
+          'Produced in notebook':nb_name}
+    md.update(dim_md)
+    md.update(other_md)
+    exportDict(md_fp, md)
+    print(f'Wrote metadata for \n\t{matrix_fp}\n to \n\t{md_fp}')
+
 def castValuesToSets(d):
     return {k:set(d[k]) for k in d}
 
