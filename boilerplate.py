@@ -399,7 +399,7 @@ def importDict(fn):
 
 def exportMatrixMetadata(md_fp, matrix_fp, matrix, dim_md, step_name, nb_name, other_md):
     md = {'matrix fp':matrix_fp,
-          'matrix shape':matrix.shape,
+          'matrix shape':matrix.shape if matrix is not None else 'N/A',
           'Produced in step':step_name,
           'Produced in notebook':nb_name}
     md.update(dim_md)
