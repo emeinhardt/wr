@@ -326,18 +326,20 @@ def wordformsOfLength(l, Ws, includingEdges = False):
     #Ws assumed to have word edges
     if includingEdges:
         return {w for w in Ws if len(ds2t(w)) == l}
-    return {w for w in Ws if len(ds2t(w)) == l + 2}
+    return {w for w in Ws if (len(ds2t(w)) + 2) == l}
 
 def wordformsAtLeastLlong(l, Ws, includingEdges = False):
     #Ws assumed to have word edges
-    maxL = len( sorted(list(Ws), key=len)[-1] )
+#     maxL = len( ds2t(sorted(list(Ws), key=len, reverse=True)[0]) )
     if includingEdges:
 #         maxL = max(wordlengthsInclEdges)
-        return union([wordformsOfLength(eachl, Ws, includingEdges) for eachl in range(l, maxL+1)])
+        return {w for w in Ws if len(ds2t(w)) >= l}
+#         return union([wordformsOfLength(eachl, Ws, includingEdges) for eachl in range(l, maxL+1)])
     if not includingEdges:
 #         maxL = max(wordlengthsNotIncludingEdges)
-        maxL = maxL - 2
-        return union([wordformsOfLength(eachl, Ws, includingEdges) for eachl in range(l, maxL+1)])
+#         maxL = maxL - 2
+        return {w for w in Ws if (len(ds2t(w)) - 2) >= l}
+#         return union([wordformsOfLength(eachl, Ws, includingEdges) for eachl in range(l, maxL+1)])
     
 def getWordformsWithx(x, Ws):
     return {w for w in Ws if x in ds2t(w)}
