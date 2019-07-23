@@ -24,13 +24,15 @@ def norms(dists):
 def isNormalized(dist, epsilon = None):
     if epsilon == None:
         epsilon = my_epsilon
-    return abs(norm(dist) - 1) < my_epsilon
+    return abs(norm(dist) - 1) < epsilon
 
 def areNormalized(dists, epsilon = None):
     if epsilon == None:
         epsilon = my_epsilon
-    return all(map(lambda k: isNormalized(dists[k]), dists))
+    return all(map(lambda k: isNormalized(dists[k], epsilon = epsilon), dists))
 
+def normalizationDefect(dist):
+    return abs(norm(dist) - 1)
 
 # import json, codecs
 
@@ -481,7 +483,9 @@ def testNPdist(pO_np, outcomeMap, pO):
     assert all([ isclose(pO_np[outcomeMap[o]], pO[o]) for o in outcomeMap])
     
 def condDistFamilyToNP(pOutIn):
-    pOutIn_np = np.array([[float(pOutIn[i][o]) for o in sorted(pOutIn[i].keys())] for i in sorted(pOutIn.keys())])
+    sorted_conditions = sorted(pOutIn.keys())
+    sorted_outcomes = sorted(outcomes(pOutIn))
+    pOutIn_np = np.array([[float(pOutIn[i][o]) for o in sorted_outcomes] for i in sorted_conditions])
     pOutIn_np = pOutIn_np.T
     return pOutIn_np
 
