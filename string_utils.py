@@ -6,6 +6,11 @@ from random import choice
 def union(Ss):
     return reduce(set.union, Ss)
 
+def language_concatenation(A, B, concat=None):
+    if concat is None:
+        concat = lambda u, v: u + v
+    return set(starmap(concat,
+                       product(A, B)))
 
 leftEdge = '⋊'
 rightEdge = '⋉'
