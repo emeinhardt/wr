@@ -508,10 +508,14 @@ def stamp():
 def stampedNote(note):
     print('{0} @ {1}'.format(note, stamp()))
 
-def startNote(note):
+def startNote(note=None):
+    if note is None:
+        note = ''
     stampedNote('Start ' + note)
     
-def endNote(note):
+def endNote(note=None):
+    if note is None:
+        note = ''
     stampedNote('End ' + note)
 
 def processDataWProgressUpdates(f, data):
