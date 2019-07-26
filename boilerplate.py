@@ -407,6 +407,9 @@ def exportMatrixMetadata(md_fp, matrix_fp, matrix, dim_md, step_name, nb_name, o
     exportDict(md_fp, md)
     print(f'Wrote metadata for \n\t{matrix_fp}\n to \n\t{md_fp}')
 
+def torch_nbytes(t):
+    return t.element_size() * t.nelement()
+    
 def castValuesToSets(d):
     return {k:set(d[k]) for k in d}
 
