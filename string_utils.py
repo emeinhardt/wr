@@ -27,6 +27,16 @@ def dottedStringToTuple(s):
 t2ds = tupleToDottedString
 ds2t = dottedStringToTuple
 
+def ds_l(s):
+    #let 
+    #  l = len(s)              ; length of a dotted string s as a string
+    #  n = len(  ds2t(s)  )    ; # of symbols in s
+    #  d = l - n               ; # of dots in s
+    #  
+    #  ∀s, d = n-1 ∴ l = n + (n - 1) = 2n - 1
+    #  ∴ n = (l+1)/2
+    return (len(s)+1)/2
+
 def padInputSequenceWithBoundaries(inputSeq):
     temp = list(dottedStringToTuple(inputSeq))
     temp = tuple([leftEdge] + temp + [rightEdge])
@@ -50,8 +60,6 @@ def lexiconToInventory(DSs):
     inventories = list(map(dsToInventory, DSs))
     return union(inventories)
 
-
-# def 
 
 
 def subInDS(dottedString, to_replace, replacement):
