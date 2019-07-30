@@ -479,6 +479,15 @@ def distToNP(pO):
     pO_np = np.array([float(pO[o]) for o in sorted(pO.keys())])
     return pO_np
 
+def NPdistToDist(pO_np, outcomeToIndexMap=None, indexToOutcomeMap=None):
+    assert not (outcomeToIndexMap is None) and (indexToOutcomeMap is None)
+    
+    if outcomeToIndexMap is not None:
+        pO = ProbDist({o:pO_np[outcomeToIndexMap[o]] for o in outcomeToIndexMap})
+    if indexToOutcomeMap is not None:
+        pO = ProbDist({indexToOutcomeMap[idx]:pO_np[idx] for idx in indexToOutcomeMap})
+    return pO
+
 def testNPdist(pO_np, outcomeMap, pO):
     assert all([ isclose(pO_np[outcomeMap[o]], pO[o]) for o in outcomeMap])
     
@@ -488,6 +497,26 @@ def condDistFamilyToNP(pOutIn):
     pOutIn_np = np.array([[float(pOutIn[i][o]) for o in sorted_outcomes] for i in sorted_conditions])
     pOutIn_np = pOutIn_np.T
     return pOutIn_np
+
+def condDistNPtoCondProbDist(pOutIn_np, conditionToIndexMap=None, indexToConditionMap=None, outcomeToIndexMap=None, indexToOutcomeMap=None):
+    assert not (conditionToIndexMap is None) and (indexToConditionMap is None)
+    assert not (outcomeToIndexMap is None) and (indexToOutcomeMap is None)
+    
+    if indexToConditionMap is not None:
+        Cs = {indexToConditionMap[idx] for idx in indexToConditionMap}
+        conditionToIndexMap = {indexToConditionMap[idx]:idx for idx in indexToConditionMap[idx]}
+    else:
+        Cs = set(conditionToIndexMap.keys())
+    if indexToOutcomeMap is not None:
+        Os = {indexToOutcomeMap[idx] for idx in indexToOutcomeMap}
+        outcomeToIndexMap = {indexToOutcomeMap[idx]:idx for idx in indexToOutcomeMap[idx]}
+    else:
+        Os = set(outcomeToIndexMap.keys())
+    
+    pOutIn = {c:ProbDist({o:pOutIn_np[conditionToIndexMap[c]][outcomeToIndexMap[o]]
+                          for o in Os})
+              for c in Cs}
+    return pOutIn
 
 def testNPcondDist(pOutIn_np, inMap, outMap, pOutIn):
     assert all( isclose(pOutIn_np[outMap[o], inMap[i]], pOutIn[i][o]) for i in inMap for o in outMap)
