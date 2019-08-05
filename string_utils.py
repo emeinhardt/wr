@@ -27,15 +27,72 @@ def dottedStringToTuple(s):
 t2ds = tupleToDottedString
 ds2t = dottedStringToTuple
 
-def ds_l(s):
-    #let 
-    #  l = len(s)              ; length of a dotted string s as a string
-    #  n = len(  ds2t(s)  )    ; # of symbols in s
-    #  d = l - n               ; # of dots in s
-    #  
-    #  ∀s, d = n-1 ∴ l = n + (n - 1) = 2n - 1
-    #  ∴ n = (l+1)/2
-    return (len(s)+1)/2
+def align_DSs(DSs):
+    '''
+    Pads each of segments of an iterable of dotted strings for easy
+    visual inspection of how two dotted strings compare.
+    '''
+    padChar = ' '
+    maxl = max({len(ds2t(w)) for w in DSs})
+    padDS = lambda ds: t2ds( tuple(list(ds2t(ds)) + ([padChar] * (maxl - len(ds2t(ds))))) )
+    paddedDSs = tuple(map(padDS, DSs))
+    
+    col_width = lambda ts, i: len(ts)[i]
+    num_cols_per_slot = lambda padded_ds: tuple(map(len, ds2t(padded_ds)))
+    ds_by_colwidth = np.stack([np.array(num_cols_per_slot(padded_ds))
+                                        for padded_ds in paddedDSs])
+    max_colwidths = np.apply_along_axis(max, axis=0, arr=ds_by_colwidth)
+    
+    pad_col = lambda i: lambda s: s if len(s) == max_colwidths[i] else s + (padChar * (max_colwidths[i] - len(s)))
+    column_padders = {i:pad_col(i) for i in range(maxl)}
+    pad_cols = lambda ds: t2ds(tuple([column_padders[i](s) for i, s in enumerate(ds2t(ds))]))
+    col_padded_paddedDSs = tuple(map(pad_cols,
+                                     paddedDSs))
+    return col_padded_paddedDSs
+
+def pprint_aligned_DSs(alignedDSs):
+# def pprint_aligned_DSs(alignedDSs, colLabelsTop=True, colLabelsBottom=True, rowLabels=True):
+    tableLength = len(alignedDSs)
+
+    tableWidth = len(list(alignedDSs)[0])
+#     collabels = ''.join( take(tableWidth, cycle('0123456789')) )
+    
+#     if colLabelsTop:
+#         if not rowLabels:
+#             print(collabels)
+#         else:
+#             print('  ' + collabels)
+    
+#     if rowLabels:
+#         rowlabels = ''.join( take( len(alignedDSs), cycle(list(map(lambda i_str: i_str + ' ',
+#                                                                    '01234567890'))) ) )
+#     else:
+#         rowlabels = ''.join( take( len(alignedDSs), cycle('') ) )
+#     if rowLabels:
+#         for r_label, ds in zip(rowlabels, alignedDSs):
+#             print(r_label + ' ' +  ds)
+#     else:
+#         for ds in alignedDSs:
+#             print(ds)
+    for ds in alignedDSs:
+        print(ds)
+        
+#     if colLabelsBottom:
+#         if not rowLabels:
+#             print(collabels)
+#         else:
+#             print('  ' + collabels)
+
+# does not work when there are diphthongs or affricates
+# def ds_l(s):
+#     #let 
+#     #  l = len(s)              ; length of a dotted string s as a string
+#     #  n = len(  ds2t(s)  )    ; # of symbols in s
+#     #  d = l - n               ; # of dots in s
+#     #  
+#     #  ∀s, d = n-1 ∴ l = n + (n - 1) = 2n - 1
+#     #  ∴ n = (l+1)/2
+#     return (len(s)+1)/2
 
 def padInputSequenceWithBoundaries(inputSeq):
     temp = list(dottedStringToTuple(inputSeq))
