@@ -222,24 +222,28 @@ def trimToSupport(dist):
     else:
         return ProbDist({e:dist[e] for e in support(dist)})
 
-def expectation(f, p):
+def expectation(p, f=None):
     '''
     Given a ProbDist p :: O ⟶ [0,1] and a mapping f :: O ⟶ R, this returns 
     the expected value of f with respect to p.
     
-    f can be a dictionary, ProbDist, or function. 
+    f can be a dictionary, ProbDist, or function.
+    
+    Alternatively, given a ProbDist p :: R ⟶ [0,1], this returns the mean of p.
     '''
+    if f is None:
+        return sum({p[o] * o for o in conditions(p)})
     if type(f) == type(dict()) or type(f) == type(Uniform({0,1})):
         lookup = lambda o: f[o]
     if callable(f):
         lookup = lambda o: f(o)
-    return sum({p[o] * lookup(f, o)
+    return sum({p[o] * lookup(o)
                 for o in p})
 
 def expectation_np(f, p):
     '''
-    Given an np array f that represents a distribution over a finite set of outcomes {O_i} and
-    an np array p that represents another distribution over the same set of outcomes,
+    Given an np array f that represents a finite set of outcomes {O_i} ∈ R and
+    an np array p that represents a distribution over the same set of outcomes,
     this returns the expectation of f wrt p.
     '''
     return np.dot(f, p)
@@ -356,7 +360,8 @@ def H_np(p, prior=None, paranoid=False):
             badValues = [(i, p_i) for i, p_i in enumerate(p) if not couldBeAProbability(p_i)]
             assert len(badValues) == 0, "{0} cannot represent probabilities".format(badValues)
             assert isNormalized_np(p), "Probabilities do not sum to 1.\n  Sum: {0}\n  Vector: {1}".format(np.sum(p), p)
-        return np.nansum(p * (-1.0 * np.log2(p)))
+        return np.dot(p, -1.0 * np.log2(p, where=(p != 0.0)))
+#         return np.nansum(p * (-1.0 * np.log2(p)))
     if prior is None:
         return np.apply_along_axis(H_np, 0, p)
     return np.dot( np.apply_along_axis(H_np, 0, p), prior )
@@ -437,6 +442,16 @@ def DKL(p, q, rel_tol=1e-09):
     assert s >= 0.0, "KL divergence {0} should be non-negative.\n  Probs: {1}\n  Pointwise divergences: {2}\n  Products: {3}".format(s, probs, pointwiseDivergences, prods)
     return s
 
+def zeros1d(a):
+    return np.setdiff1d( np.arange(a.shape[0]), a.nonzero()[0] )
+
+def DKL_np(p, q):
+#     p_zs = zeros1d(p)
+#     q_zs = zeros1d(q)
+    d = p / q
+    log_d = np.log2(d, where=(p != 0) & (q != 0))
+    return np.dot(p, log_d)
+
 def binary_mixture(p, q, l):
     """
     Given two spaces P, Q, and the weight (l = "λ") of P, returns a new space R s.t.
@@ -448,7 +463,7 @@ def binary_mixture(p, q, l):
               for o in outcomes}
     return ProbDist(R_dict)
 
-def LD(p, q, l):
+def LD(p, q, l=0.5):
     """
     Given two spaces p, q, and the weight (l = "λ") of p, returns the λ-divergence:
         D_λ(P||Q) = λD_KL(P||λP + μQ) + μD_KL(Q||λP + μQ)
@@ -462,9 +477,85 @@ def LD(p, q, l):
 
 def JS(p,q):
     """
-    Given two spaces p, q, returns the Jensen-Shannon divergence between them.
+    Given two spaces p, q, returns the canonical Jensen-Shannon divergence between 
+    them.
     """
     return LD(p, q, 0.5)
+
+def mixture(Ps, mixture_probs=None, mixture_labels=None):
+    '''
+    Given 
+     - a collection of probability distributions Ps
+       on a common outcome space
+     - a same-length collection of mixture probabilities
+    
+    This returns a ('flat') ProbDist R representing the 
+    natural mixture distribution over outcomes.
+    
+    If given a set of mixture labels instead of a collection
+    of mixture probabilities, this returns a conditional 
+    distribution.
+    '''
+    
+    Os = conditions(Ps[0])
+    if mixture_labels is None:
+        assert len(mixture_probs) == len(Ps)
+        mixture_dist_np = np.array(mixture_probs)
+        assert is_a_distribution_np(mixture_dist_np)
+        index_to_obj_map = {i:i for i in range(len(mixture_dist_np))}
+        mixture_dist = NPdistToDist(mixture_dist_np, 
+                                    outcomeToIndexMap=index_to_obj_map
+#                                     indexToOutcomeMap=index_to_obj_map
+                                   )
+#         print(mixture_dist)
+        # map each o to its marginal probability under the mixture distribution
+        R = {o:expectation(mixture_dist, {i:Ps[i][o]
+                                          for i in index_to_obj_map})
+             for o in Os}
+        return ProbDist(R)
+    else:
+        assert len(mixture_labels) == len(Ps)
+        return {c:Ps[i]
+                for i,c in enumerate(mixture_labels)}
+
+# mixture([ProbDist({'H':0.25, 'T':0.75}), ProbDist({'H':0.75, 'T':0.25})], mixture_probs=[0.5, 0.5])
+# mixture([ProbDist({'H':0.25, 'T':0.75}), ProbDist({'H':0.75, 'T':0.25})], mixture_probs=[0.99, 0.01])
+# mixture([ProbDist({'H':0.25, 'T':0.75}), ProbDist({'H':0.50, 'T':0.50})], mixture_labels=['biased', 'fair'])
+
+def DJS(mixture_components, component_dist):
+    '''
+    This is the generalized Jensen-Shannon divergence,
+    abstracted to accomodate mixture models with more 
+    than two components and with an arbitrary 
+    distribution over components.
+    
+    Let M(x) be a mixture distribution over X defined by
+        - [π_0...π_n]
+        - P(π_i)
+    
+    Then,
+        D_JS([π_0...π_n], P(π_i))
+         = 𝚺_i P(π_i) D_KL(π_i(x) || M(x))
+    
+    In terms of types, mixture_components should be a
+    finite ordered collection of ProbDists and 
+    component_dist should be a finite ordered collection
+    that defines a probability distribution.
+    '''
+    assert sum(component_dist) == 1
+    assert len(component_dist) == len(mixture_components)
+    
+    C = mixture_components
+    pC = component_dist
+    M = mixture(C, pC)
+    
+    DKL_terms = [DKL(c, M) for c in C]
+    weighted_terms = [pC[i] * t for i,t in enumerate(DKL_terms)]
+    DJS_result = sum(weighted_terms)
+    return DJS_result
+
+# DJS([ProbDist({'H':0.25, 'T':0.75}), ProbDist({'H':0.75, 'T':0.25})], component_dist=[0.5, 0.5])
+# JS(ProbDist({'H':0.25, 'T':0.75}), ProbDist({'H':0.75, 'T':0.25}))
 
 def condDistsAsProbDists(condDist):
     return {i:ProbDist(condDist[i]) for i in condDist}
