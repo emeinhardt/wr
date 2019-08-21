@@ -5,6 +5,8 @@ import json, codecs, csv
 import os
 # from os.path import isfile
 from time import localtime, strftime
+from datetime import datetime
+import psutil
 from joblib import Parallel, delayed
 
 from string_utils import *
@@ -500,6 +502,36 @@ def oneHotToSeqMap(seqs):
     return OHtoSeq
 
 
+# adapted from https://stackoverflow.com/a/32009595
+def toHuman(size, precision=2, asString=True):
+    suffixes=['B','KB','MB','GB','TB']
+    suffixIndex = 0
+    while size > 1024 and suffixIndex < 4:
+        suffixIndex += 1 #increment the index of the suffix
+        size = size/1024.0 #apply the division
+    if asString:
+        return "%.*f%s"%(precision,size,suffixes[suffixIndex])
+    return size
+
+# adapted from https://stackoverflow.com/a/32009595
+def bytesTo(size_bytes, scale='GB'):
+    scales = ('B', 'KB', 'MB', 'GB', 'TB')
+    assert scale in scales, f'scale must be one of {scales}, got {scale} instead.'
+    scaleIndex = scales.index(scale)
+    return size_bytes / (1024 ** scaleIndex)
+
+
+def memTotal(units='GB'):
+    return bytesTo(psutil.virtual_memory().total, units)
+
+
+def memAvailable(units='GB'):
+    return bytesTo(psutil.virtual_memory().available, units)
+
+
+def memUsed(units='GB'):
+    return bytesTo(psutil.virtual_memory().used, units)
+
 
 # Parallel dictionary definition and data processing w/ progress reports
 
@@ -521,6 +553,14 @@ def endNote(note=None):
         note = ''
     stampedNote('End ' + note)
 
+def timeDiff(t1_string, t0_string, asSeconds=True):
+    FMT = '%H:%M:%S'
+    tDelta = datetime.strptime(t1_string, FMT) - datetime.strptime(t0_string, FMT)
+    if not asSeconds:
+        return tDelta
+    return tDelta.total_seconds()
+    
+    
 def processDataWProgressUpdates(f, data):
     print('Start @ {0}'.format(stamp()))
     l = len(data)
