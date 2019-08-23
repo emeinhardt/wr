@@ -409,7 +409,7 @@ def exportMatrixMetadata(md_fp, matrix_fp, matrix, dim_md, step_name, nb_name, o
     exportDict(md_fp, md)
     print(f'Wrote metadata for \n\t{matrix_fp}\n to \n\t{md_fp}')
 
-def torch_nbytes(t):
+def torch_nbytes(t): #nottttt sure I trust this does what I thought it ought to
     return t.element_size() * t.nelement()
     
 def castValuesToSets(d):
@@ -533,6 +533,11 @@ def memUsed(units='GB'):
     return bytesTo(psutil.virtual_memory().used, units)
 
 
+def memTrigger(mem_left_trigger_GB=2.0):
+    if memAvailable() <= mem_left_trigger_GB:
+        raise Exception(f"Less than {mem_left_trigger_GB} left!")
+
+
 # Parallel dictionary definition and data processing w/ progress reports
 
 
@@ -553,12 +558,16 @@ def endNote(note=None):
         note = ''
     stampedNote('End ' + note)
 
-def timeDiff(t1_string, t0_string, asSeconds=True):
+def timeDiff(t0_string, t1_string, asSeconds=True):
     FMT = '%H:%M:%S'
     tDelta = datetime.strptime(t1_string, FMT) - datetime.strptime(t0_string, FMT)
     if not asSeconds:
         return tDelta
     return tDelta.total_seconds()
+    
+
+def memDiff(m0, m1):
+    return m1 - m0
     
     
 def processDataWProgressUpdates(f, data):
