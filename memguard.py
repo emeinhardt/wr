@@ -130,7 +130,7 @@ def wait_and_check_for_active_kernels(cpu_threshold=0.2, waiting_time_m=1, timeo
     active_kernels = sorted(get_active_kernels(cpu_threshold), reverse=True)
 
     while len(active_kernels) == 0 and minutes_since_first_activity_check < timeout_m:
-        print(f"{minutes_since_first_activity_check}m since watch period started. No active kernels found. Sleeping for {waiting_time_m}m...")
+        print(f"\t{minutes_since_first_activity_check}m since watch period started. No active kernels found. Sleeping for {waiting_time_m}m...")
         
         #wait waiting_time_m minutes
         sleep(60*waiting_time_m) 
@@ -150,10 +150,10 @@ def wait_and_check_for_active_kernels(cpu_threshold=0.2, waiting_time_m=1, timeo
 
 
 def guard_memory_usage(cpu_threshold=0.000001, threshold_available_GB=2.0, time_between_checks_s=5):
-    print("Monitoring active kernels...")
+    print(">Monitoring active kernels...")
     active_kernels = sorted(get_active_kernels(cpu_threshold=cpu_threshold), reverse=True)
     available_memory = memAvailable()
-    print(f"|active kernels| = {len(active_kernels)}; available memory = {toHuman(psutil.virtual_memory().available)}; total memory = {toHuman(psutil.virtual_memory().total)}.")
+    print(f"\t|active kernels| = {len(active_kernels)}; available memory = {toHuman(psutil.virtual_memory().available)}; total memory = {toHuman(psutil.virtual_memory().total)}.")
 
     while len(active_kernels) > 0 and available_memory > threshold_available_GB:
         
@@ -163,13 +163,13 @@ def guard_memory_usage(cpu_threshold=0.000001, threshold_available_GB=2.0, time_
         available_memory = memAvailable()
     
     while len(active_kernels) > 0 and available_memory < threshold_available_GB:
-        print(f"Available memory {available_memory}GB is below trigger threshold {threshold_available_GB}GB!")
-        print(f"{len(active_kernels)} active kernels.")
+        print(f">Available memory {available_memory}GB is below trigger threshold {threshold_available_GB}GB!")
+        print(f">{len(active_kernels)} active kernels.")
         
         for kernel in active_kernels:
             pid = kernel[1]
             
-            print(f"Attempting to kill pid {pid}!")
+            print(f">Attempting to kill pid {pid}!")
             try:
                 p = psutil.Process(pid)
                 
