@@ -338,6 +338,9 @@ def couldBeAProbability(p):
 def isNormalized_np(p):
     return np.isclose(p.sum(), 1.0)
 
+def areNormalized_np(p):
+    return np.allclose(p.sum(axis=0), np.ones(shape=(p.shape[1])))
+
 def is_a_distribution_np(p):
     return isNormalized_np(p) and all(list(map(couldBeAProbability, p)))
 
