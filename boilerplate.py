@@ -1,6 +1,7 @@
 from functools import reduce
 from random import choice
 from itertools import takewhile, product
+import funcy
 import json, codecs, csv
 import os
 # from os.path import isfile
@@ -86,6 +87,23 @@ def mapValues(f, d):
     '''
     return {k:f(d[k]) for k in d}
 
+
+def extract(i, Xs, returnAs='l,t,r', combine=funcy.lconcat):
+    x_i = Xs[i]
+    X_l = Xs[:i]
+    X_r = Xs[i+1:]
+    if returnAs == 'l,t,r':
+        return (X_l, x_i, X_r)
+    elif returnAs == 'l_r':
+        return (X_l, X_r)
+    elif returnAs == 'lr':
+        return combine(X_l, X_r)
+    elif returnAs == 't,l_r':
+        return (x_i, (X_l, X_r))
+    elif returnAs == 'l_r,t':
+        return ((X_l, X_r), x_i)
+    else:
+        raise Exception('wtf')
 
 # N-phones, k-factors, and other string-related code
 
@@ -535,8 +553,11 @@ def memUsed(units='GB'):
 
 def memTrigger(mem_left_trigger_GB=2.0):
     if memAvailable() <= mem_left_trigger_GB:
-        raise Exception(f"Less than {mem_left_trigger_GB} left!")
+        raise MemoryError(f"Less than {mem_left_trigger_GB} left!")
 
+def memDiff(m0, m1):
+    return m1 - m0
+        
 
 # Parallel dictionary definition and data processing w/ progress reports
 
@@ -545,8 +566,13 @@ def memTrigger(mem_left_trigger_GB=2.0):
 def stamp():
     return strftime('%H:%M:%S', localtime())
 
-def stampedNote(note):
-    print('{0} @ {1}'.format(note, stamp()))
+def stampedNote(note, printResult=True, returnResult=False):
+    result = '{0} @ {1}'.format(note, stamp())
+    if printResult:
+        print(result)
+    if returnResult:
+        return result
+       
 
 def startNote(note=None):
     if note is None:
@@ -564,10 +590,32 @@ def timeDiff(t0_string, t1_string, asSeconds=True):
     if not asSeconds:
         return tDelta
     return tDelta.total_seconds()
-    
 
-def memDiff(m0, m1):
-    return m1 - m0
+def stampedMemNote(msg='', units='GB', includeGPU=False, printResult=True, returnResult=False):
+    mem_usage = 'VM used vs. available: {0:.2f}{2} vs. {1:.2f}{2}'.format(memUsed(units), memAvailable(units), units)
+    if g and includeGPU:
+#         g_info = gpuMem()
+#         total, alloc, cached = g_info['total'], g_info['allocated'], g_info['cached']
+#         gpu_usage = 'GPU mem allocated, cached, total: {0:.2f}MB vs. {1:.2f}MB vs. {1:.2f}MB'.format(alloc, cached, total)
+        pass
+    if msg == '':
+        if returnResult:
+            return stampedNote(mem_usage, printResult=printResult, returnResult=returnResult)
+        else:
+            stampedNote(mem_usage, printResult=printResult, returnResult=returnResult)
+#         if g and includeGPU:
+#             print(gpu_usage)
+        
+    if returnResult:
+        stamped_msg = stampedNote(msg, printResult=printResult, returnResult=returnResult)
+        mem_msg = '\t'+mem_usage
+        if printResult:
+            print(mem_msg)
+        total_msg = stamped_msg + '\n' + mem_msg
+        return total_msg
+    else:
+        stampedNote(msg, printResult=printResult, returnResult=returnResult)
+        print('\t'+mem_usage)
     
     
 def processDataWProgressUpdates(f, data):
