@@ -318,119 +318,181 @@ def d_h(u, v):
         return np.infty
     return sum(tuple(starmap(d_s, zip(u_t,v_t))))
 
-def hamming_neighbors(s, W, withSameLength=None):
+def hamming_neighbors(s, W):
     '''
     Returns the strings of W that are exactly Hamming distance 1 from s.
     '''
-    if withSameLength is None:
-        my_l = len(ds2t(s))
-        withSameLength = {v for v in W if len(ds2t(v)) == my_l}
-    return h_sphere(1, s, W, withSameLength=withSameLength)
+    return h_sphere(1, s, W)
 
-def h_sphere(k, s, W, exclude_s = False, withSameLength=None):
+def h_sphere(k, s, W, exclude_s = False):
     '''
     Returns the strings of W that are exactly Hamming distance k from s.
     '''
-    if withSameLength is None:
-        my_l = len(ds2t(s))
-        withSameLength = {v for v in W if len(ds2t(v)) == my_l}
-    
-    sphere = {v for v in withSameLength if d_h(s,v) == k}
-#     sphere = {v for v in W if d_h(s,v) == k}
+    sphere = {v for v in W if d_h(s,v) == k}
     if exclude_s:
         return sphere - {s}
     return sphere
 
-def h_neighborhood(k, s, W, exclude_s = False, withSameLength=None):
+def h_neighborhood(k, s, W, exclude_s = False):
     '''
     Returns all strings of W whose Hamming distance from s is <= k.
     '''
-    if withSameLength is None:
-        my_l = len(ds2t(s))
-        withSameLength = {v for v in W if len(ds2t(v)) == my_l}
-    
-    N = {v for v in withSameLength if d_h(s,v) <= k}
-#     N = {v for v in W if d_h(s,v) <= k}
+    N = {v for v in W if d_h(s,v) <= k}
     if exclude_s:
         return N - {s}
     return N
 
-def getSpheres(s, W, withSameLength=None):
+def getSpheres(s, W):
     '''
     Returns a mapping from [0,len(s)-1] to the corresponding 
     Hamming spheres of s in W.
     '''
-    if withSameLength is None:
-        my_l = len(ds2t(s))
-        withSameLength = {v for v in W if len(ds2t(v)) == my_l}
-        
     D = range(len(ds2t(s)))
-    spheres = {d:h_sphere(d, s, W, withSameLength=withSameLength) for d in D}
+    spheres = {d:h_sphere(d, s, W) for d in D}
     return spheres
 
-def neighborhood_measures(k, s, W, M, exclude_s = False, withSameLength=None):
+def neighborhood_measures(k, s, W, M, exclude_s = False):
     '''
     Applies a measure M (dictionary) to each of the k-neighbors
     of s in W.
     '''
-    if withSameLength is None:
-        my_l = len(ds2t(s))
-        withSameLength = {v for v in W if len(ds2t(v)) == my_l}
-        
-    N = h_neighborhood(k, s, W, exclude_s, withSameLength=withSameLength)
+    N = h_neighborhood(k, s, W, exclude_s)
     Ms = {v:M[v] for v in N}
     return Ms
 
-
-
-def are_k_cousins(prefix, wordform, k, prefixes, exactlyK = True, withSameLength=None):
+def are_k_cousins(prefix, wordform, k, prefixes, exactlyK = True):
+    if exactlyK:
+        k_cousins = h_sphere(k, prefix, prefixes)
+    else:
+        k_cousins = h_neighborhood(k, prefix, prefixes)
     prefixesOfw = getPrefixes(wordform)
-    my_l = len(ds2t(prefix))
-    
-    if withSameLength is None:
-        withSameLength = {p for p in prefixes if len(ds2t(p)) == my_l}
-        
-    if exactlyK:
-        k_cousins = h_sphere(k, prefix, prefixes, withSameLength=withSameLength)
-        relevant_prefixesOfw = {p for p in prefixesOfw if len(ds2t(p)) == my_l}
-    else:
-        k_cousins = h_neighborhood(k, prefix, prefixes, withSameLength=withSameLength)
-        relevant_prefixesOfw = prefixesOfw
-    
-    return any(p in k_cousins for p in relevant_prefixesOfw)
+    return any(p in k_cousins for p in prefixesOfw)
 
-def get_k_cousins(prefix, k, Ws, prefixes, exactlyK = True, withSameLength=None):
-    my_l = len(ds2t(prefix))
-    
-    if withSameLength is None:        
-        withSameLength = {p for p in prefixes if len(ds2t(p)) == my_l}
-    
+def get_k_cousins(prefix, k, Ws, prefixes, exactlyK = True):
     if exactlyK:
-        k_cousins = h_sphere(k, prefix, prefixes, withSameLength=withSameLength)
-        relevant_prefixesOfW = {w:{p for p in getPrefixes(w) if len(ds2t(p)) == my_l}
-                                for w in Ws}
+        k_cousins = h_sphere(k, prefix, prefixes)
     else:
-        k_cousins = h_neighborhood(k, prefix, prefixes, withSameLength=withSameLength)
-        relevant_prefixesOfW = {w:getPrefixes(w) for w in Ws}
-        
-    return {w for w in Ws if any(p in k_cousins for p in relevant_prefixesOfW[w])}
+        k_cousins = h_neighborhood(k, prefix, prefixes)
+    return {w for w in Ws if any(p in k_cousins for p in getPrefixes(w))}
 
-def count_k_cousins(prefix, k, Ws, prefixes, exactlyK = True, withSameLength=None):
-    my_l = len(ds2t(prefix))
-    
-    if withSameLength is None:
-        withSameLength = {p for p in prefixes if len(ds2t(p)) == my_l}
-    
+def count_k_cousins(prefix, k, Ws, prefixes, exactlyK = True):
     if exactlyK:
-        k_cousins = h_sphere(k, prefix, prefixes, withSameLength=withSameLength)
+        k_cousins = h_sphere(k, prefix, prefixes)
+    else:
+        k_cousins = h_neighborhood(k, prefix, prefixes)
+    return len({w for w in Ws if any(p in k_cousins for p in getPrefixes(w))})
+
+# def hamming_neighbors(s, W, withSameLength=None):
+#     '''
+#     Returns the strings of W that are exactly Hamming distance 1 from s.
+#     '''
+#     if withSameLength is None:
+#         my_l = len(ds2t(s))
+#         withSameLength = {v for v in W if len(ds2t(v)) == my_l}
+#     return h_sphere(1, s, W, withSameLength=withSameLength)
+
+# def h_sphere(k, s, W, exclude_s = False, withSameLength=None):
+#     '''
+#     Returns the strings of W that are exactly Hamming distance k from s.
+#     '''
+#     if withSameLength is None:
+#         my_l = len(ds2t(s))
+#         withSameLength = {v for v in W if len(ds2t(v)) == my_l}
+    
+#     sphere = {v for v in withSameLength if d_h(s,v) == k}
+# #     sphere = {v for v in W if d_h(s,v) == k}
+#     if exclude_s:
+#         return sphere - {s}
+#     return sphere
+
+# def h_neighborhood(k, s, W, exclude_s = False, withSameLength=None):
+#     '''
+#     Returns all strings of W whose Hamming distance from s is <= k.
+#     '''
+#     if withSameLength is None:
+#         my_l = len(ds2t(s))
+#         withSameLength = {v for v in W if len(ds2t(v)) == my_l}
+    
+#     N = {v for v in withSameLength if d_h(s,v) <= k}
+# #     N = {v for v in W if d_h(s,v) <= k}
+#     if exclude_s:
+#         return N - {s}
+#     return N
+
+# def getSpheres(s, W, withSameLength=None):
+#     '''
+#     Returns a mapping from [0,len(s)-1] to the corresponding 
+#     Hamming spheres of s in W.
+#     '''
+#     if withSameLength is None:
+#         my_l = len(ds2t(s))
+#         withSameLength = {v for v in W if len(ds2t(v)) == my_l}
+        
+#     D = range(len(ds2t(s)))
+#     spheres = {d:h_sphere(d, s, W, withSameLength=withSameLength) for d in D}
+#     return spheres
+
+# def neighborhood_measures(k, s, W, M, exclude_s = False, withSameLength=None):
+#     '''
+#     Applies a measure M (dictionary) to each of the k-neighbors
+#     of s in W.
+#     '''
+#     if withSameLength is None:
+#         my_l = len(ds2t(s))
+#         withSameLength = {v for v in W if len(ds2t(v)) == my_l}
+        
+#     N = h_neighborhood(k, s, W, exclude_s, withSameLength=withSameLength)
+#     Ms = {v:M[v] for v in N}
+#     return Ms
+
+# def are_k_cousins(prefix, wordform, k, prefixes, exactlyK = True, withSameLength=None):
+#     prefixesOfw = getPrefixes(wordform)
+#     my_l = len(ds2t(prefix))
+    
+#     if withSameLength is None:
+#         withSameLength = {p for p in prefixes if len(ds2t(p)) == my_l}
+        
+#     if exactlyK:
+#         k_cousins = h_sphere(k, prefix, prefixes, withSameLength=withSameLength)
 #         relevant_prefixesOfw = {p for p in prefixesOfw if len(ds2t(p)) == my_l}
-        relevant_prefixesOfW = {w:{p for p in getPrefixes(w) if len(ds2t(p)) == my_l}
-                        for w in Ws}
-    else:
-        k_cousins = h_neighborhood(k, prefix, prefixes, withSameLength=withSameLength)
-        relevant_prefixesOfW = {w:getPrefixes(w) for w in Ws}
+#     else:
+#         k_cousins = h_neighborhood(k, prefix, prefixes, withSameLength=withSameLength)
+#         relevant_prefixesOfw = prefixesOfw
+    
+#     return any(p in k_cousins for p in relevant_prefixesOfw)
+
+# def get_k_cousins(prefix, k, Ws, prefixes, exactlyK = True, withSameLength=None):
+#     my_l = len(ds2t(prefix))
+    
+#     if withSameLength is None:        
+#         withSameLength = {p for p in prefixes if len(ds2t(p)) == my_l}
+    
+#     if exactlyK:
+#         k_cousins = h_sphere(k, prefix, prefixes, withSameLength=withSameLength)
+#         relevant_prefixesOfW = {w:{p for p in getPrefixes(w) if len(ds2t(p)) == my_l}
+#                                 for w in Ws}
+#     else:
+#         k_cousins = h_neighborhood(k, prefix, prefixes, withSameLength=withSameLength)
+#         relevant_prefixesOfW = {w:getPrefixes(w) for w in Ws}
         
-    return len({w for w in Ws if any(p in k_cousins for p in relevant_prefixesOfW[w])})
+#     return {w for w in Ws if any(p in k_cousins for p in relevant_prefixesOfW[w])}
+
+# def count_k_cousins(prefix, k, Ws, prefixes, exactlyK = True, withSameLength=None):
+#     my_l = len(ds2t(prefix))
+    
+#     if withSameLength is None:
+#         withSameLength = {p for p in prefixes if len(ds2t(p)) == my_l}
+    
+#     if exactlyK:
+#         k_cousins = h_sphere(k, prefix, prefixes, withSameLength=withSameLength)
+# #         relevant_prefixesOfw = {p for p in prefixesOfw if len(ds2t(p)) == my_l}
+#         relevant_prefixesOfW = {w:{p for p in getPrefixes(w) if len(ds2t(p)) == my_l}
+#                         for w in Ws}
+#     else:
+#         k_cousins = h_neighborhood(k, prefix, prefixes, withSameLength=withSameLength)
+#         relevant_prefixesOfW = {w:getPrefixes(w) for w in Ws}
+        
+#     return len({w for w in Ws if any(p in k_cousins for p in relevant_prefixesOfW[w])})
 
 
 
