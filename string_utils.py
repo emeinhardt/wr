@@ -385,9 +385,9 @@ def neighborhood_measures(k, s, W, M, exclude_s = False, withSameLength=None):
 
 def are_k_cousins(prefix, wordform, k, prefixes, exactlyK = True, withSameLength=None):
     prefixesOfw = getPrefixes(wordform)
+    my_l = len(ds2t(prefix))
     
     if withSameLength is None:
-        my_l = len(ds2t(prefix))
         withSameLength = {p for p in prefixes if len(ds2t(p)) == my_l}
         
     if exactlyK:
@@ -400,36 +400,37 @@ def are_k_cousins(prefix, wordform, k, prefixes, exactlyK = True, withSameLength
     return any(p in k_cousins for p in relevant_prefixesOfw)
 
 def get_k_cousins(prefix, k, Ws, prefixes, exactlyK = True, withSameLength=None):
-    prefixesOfw = getPrefixes(wordform)
+    my_l = len(ds2t(prefix))
     
-    if withSameLength is None:
-        my_l = len(ds2t(prefix))
+    if withSameLength is None:        
         withSameLength = {p for p in prefixes if len(ds2t(p)) == my_l}
     
     if exactlyK:
         k_cousins = h_sphere(k, prefix, prefixes, withSameLength=withSameLength)
-        relevant_prefixesOfw = {p for p in prefixesOfw if len(ds2t(p)) == my_l}
+        relevant_prefixesOfW = {w:{p for p in getPrefixes(w) if len(ds2t(p)) == my_l}
+                                for w in Ws}
     else:
         k_cousins = h_neighborhood(k, prefix, prefixes, withSameLength=withSameLength)
-        relevant_prefixesOfw = prefixesOfw
+        relevant_prefixesOfW = {w:getPrefixes(w) for w in Ws}
         
-    return {w for w in Ws if any(p in k_cousins for p in relevant_prefixesOfw)}
+    return {w for w in Ws if any(p in k_cousins for p in relevant_prefixesOfW[w])}
 
 def count_k_cousins(prefix, k, Ws, prefixes, exactlyK = True, withSameLength=None):
-    prefixesOfw = getPrefixes(wordform)
+    my_l = len(ds2t(prefix))
     
     if withSameLength is None:
-        my_l = len(ds2t(prefix))
         withSameLength = {p for p in prefixes if len(ds2t(p)) == my_l}
     
     if exactlyK:
         k_cousins = h_sphere(k, prefix, prefixes, withSameLength=withSameLength)
-        relevant_prefixesOfw = {p for p in prefixesOfw if len(ds2t(p)) == my_l}
+#         relevant_prefixesOfw = {p for p in prefixesOfw if len(ds2t(p)) == my_l}
+        relevant_prefixesOfW = {w:{p for p in getPrefixes(w) if len(ds2t(p)) == my_l}
+                        for w in Ws}
     else:
         k_cousins = h_neighborhood(k, prefix, prefixes, withSameLength=withSameLength)
-        relevant_prefixesOfw = prefixesOfw
+        relevant_prefixesOfW = {w:getPrefixes(w) for w in Ws}
         
-    return len({w for w in Ws if any(p in k_cousins for p in relevant_prefixesOfw)})
+    return len({w for w in Ws if any(p in k_cousins for p in relevant_prefixesOfW[w])})
 
 
 
