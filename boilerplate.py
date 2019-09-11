@@ -481,11 +481,23 @@ def rev(t):
     return tuple(reversed(t))
 
 def seqsToIndexMap(seqs):
+    '''
+    Given a collection (of sequences) S, this function:
+      1. sorts the collection
+      2. returns a dictionary mapping elements of S to 
+          their index in the sorted version of S.
+    '''
     sorted_seqs = sorted(seqs)
     myIndexMap = dict(map(rev, enumerate(sorted_seqs)))
     return myIndexMap
 
 def indexToSeqMap(seqs):
+    '''
+    Given a collection (of sequences) S, this function:
+      1. sorts the collection
+      2. returns a dictionary mapping an index of the sorted
+         collection to the corresponding element of S.
+    '''
     sorted_seqs = sorted(seqs)
     mySeqMap = dict(enumerate(sorted_seqs))
     return mySeqMap
@@ -494,8 +506,22 @@ def areInverses(dictA, dictB):
     return all(dictB[dictA[k]] == k for k in dictA)
 
 def seqMapToOneHots(seqMap):
+    '''
+    Given a dict mapping elements of a collection (of sequences)
+    S to their index in a sorted version of S, where |S| = n
+    this function constructs and returns a square (n,n) matrix where 
+    row/column i represents the one-hot vector for element i of
+    the sorted version of S.
+    '''
     n = len(seqMap.keys())
+    
+    #For each seq, we want a OH vector.
+    #
+    #That OH vector has to have 
+    # the same number of elements as 
+    # there are seqs.
     one_hots = np.zeros((n,n))
+    
     for (seq, idx) in seqMap.items():
         one_hots[idx][idx] = 1.0
     return one_hots
@@ -504,12 +530,22 @@ def seqToOneHot(seq, seqMap, one_hots):
     return one_hots[seqMap[seq]]
 
 def seqsToOneHotMap(seqs):
+    '''
+    Given a collection (of sequences) S, this function
+    returns a dictionary mapping elements of S to their
+    natural one-hot vector.
+    '''
     seqMap = seqsToIndexMap(seqs)
     one_hots = seqMapToOneHots(seqMap)
     return {seq:one_hots[seqMap[seq]]
             for seq in seqMap}
 
 def oneHotToSeqMap(seqs):
+    '''
+    Given a collection (of sequences) S, this function
+    returns a function mapping a one-hot vector to its
+    corresponding element of S.
+    '''
     sorted_seqs = sorted(seqs)
     seqsToOHmap = seqsToOneHotMap(seqs)
     seqsToOHmap_t = mapValues(tuple, seqsToOHmap)
@@ -519,6 +555,37 @@ def oneHotToSeqMap(seqs):
         return OHtoSeqs[OH_t]
     return OHtoSeq
 
+def seqStackToIndexStack(seqStack, seqToIndexMap):
+    '''
+    Given 
+     - a mapping seqToIndexMap from elements of a collection S
+       to their indices in a sorted version of S
+     - a finite sequence of elements of S
+    
+    this returns an array that maps seqToIndexMap over the sequence.
+    '''
+    return np.array(lmap(lambda seq: seqToIndexMap[seq], seqStack))
+
+def seqStackToOHstack(seqStack, seqToOHmap):
+    '''
+    Given 
+     - a mapping seqToOHmap from elements of a collection S
+       to their one-hot vectors
+     - a finite sequence of elements of S
+    
+    this returns an array that maps seqToOHmap over the sequence.
+    '''
+    return np.array(lmap(lambda seq: seqToOHmap[seq], seqStack))
+
+def OHstackToSeqStack(OHstack, OHtoSeqMap):
+    '''
+    Given
+     - a function mapping one-hot vectors to elements of a collection S
+     - a finite sequence of one-hot vectors
+     
+    this returns a corresponding list of elements of S.
+    '''
+    return lmap(OHtoSeqMap, OHstack)
 
 # adapted from https://stackoverflow.com/a/32009595
 def toHuman(size, precision=2, asString=True):
