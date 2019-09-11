@@ -2,6 +2,7 @@ from functools import reduce
 from itertools import takewhile, product, starmap
 import numpy as np
 from random import choice
+from funcy import *
 
 def union(Ss):
     return reduce(set.union, Ss)
@@ -26,6 +27,22 @@ def dottedStringToTuple(s):
 
 t2ds = tupleToDottedString
 ds2t = dottedStringToTuple
+
+def coerceDStoLength(ds, l, padChar='?'):
+    s_t = ds2t(ds)
+    my_l = len(s_t)
+    if my_l == l:
+        return ds
+    elif my_l > l:
+        new_s_t = s_t[:l]
+        new_ds = t2ds(new_s_t)
+        return new_ds
+    else:
+        n_pad_chars = l - my_l
+        pad_ds = str_join('.', [padChar for each in range(n_pad_chars)])
+        padded_ds = ds + '.' + pad_ds
+        assert len(ds2t(padded_ds)) == l
+        return padded_ds
 
 def align_DSs(DSs):
     '''
@@ -101,8 +118,12 @@ def padInputSequenceWithBoundaries(inputSeq):
 
 def trimBoundariesFromSequence(seq):
     temp = list(dottedStringToTuple(seq))
+    if len(temp) < 1:
+        return seq
     if temp[0] == leftEdge:
         temp = temp[1:]
+    if len(temp) < 1:
+        return tupleToDottedString(tuple(temp))
     if temp[-1] == rightEdge:
         temp = temp[:-1]
     return tupleToDottedString(tuple(temp))
@@ -495,7 +516,30 @@ def count_k_cousins(prefix, k, Ws, prefixes, exactlyK = True):
 #     return len({w for w in Ws if any(p in k_cousins for p in relevant_prefixesOfW[w])})
 
 
+#'string' rather than 'word' because we also will want this
+# for use with prefixes; other code that uses the term 'word'
+# is specific to *words* because of edges
+def stringLengths(L, includingEdges = False):
+    if includingEdges:
+        return {len(ds2t(s)) for s in L}
+    L_no_edges = {trimBoundariesFromSequence(s) for s in L}
+    return stringLengths(L_no_edges, includingEdges = True)
 
+def LbyLength(L, includingEdges = False):
+    lengths = stringLengths(L, includingEdges=includingEdges)
+#     if includingEdges:
+#         my_L = L
+#     else:
+#         my_L = {trimBoundariesFromSequence(s) for s in L}
+    l_to_s = {l:set() for l in lengths}
+    for s in L:
+        if includingEdges:
+            my_s = s
+        else:
+            my_s = trimBoundariesFromSequence(s)
+        my_l = len(ds2t(my_s))
+        l_to_s[my_l].add(s)
+    return l_to_s
 
 def wordformsOfLength(l, Ws, includingEdges = False):
     #Ws assumed to have word edges
