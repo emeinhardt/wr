@@ -1,3 +1,15 @@
+"""
+If you find yourself using notebooks in this repository 
+on a server with less than ≈190GB of RAM, you may find 
+this script useful.
+
+If you run `python wr/memguard.py` in the background while
+running other notebooks in this repository, this script
+will monitor memory usage/available memory, and when
+availabe memory drops below 2GB, it will attempt to kill
+*all python* processes.
+"""
+
 from os import getpid, kill
 from time import sleep
 import re
