@@ -341,6 +341,14 @@ def isNormalized_np(p):
 def areNormalized_np(p):
     return np.allclose(p.sum(axis=0), np.ones(shape=(p.shape[1])))
 
+def normalize_np(p):
+    return p / p.sum()
+
+def normalizeCondDist_np(p):
+    col_sums = p.sum(axis=0, keepdims=True)
+    p_normalized = p / col_sums
+    return p_normalized
+
 def is_a_distribution_np(p):
     return isNormalized_np(p) and all(list(map(couldBeAProbability, p)))
 
