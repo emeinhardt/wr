@@ -33,6 +33,7 @@ Thumbs.db
 *.png
 *.npz
 .nfs*
+*.hdf5
 
 __MACOSX/
 __pycache__/
