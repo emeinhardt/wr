@@ -19,14 +19,66 @@ edgeSymbols = {leftEdge, rightEdge}
 
 
 
-def tupleToDottedString(pair): 
-    return '.'.join(pair)
+def tupleToDottedString(tuple_string): 
+    '''
+    Takes a tuple of strings and joins them using '.'.
+    '''
+    return '.'.join(tuple_string)
 
 def dottedStringToTuple(s): 
+    '''
+    Takes a '.'-separated string turns it into a tuple of strings.
+    '''
     return tuple(s.split('.'))
 
-t2ds = tupleToDottedString
-ds2t = dottedStringToTuple
+def t2ds(tuple_string, sep='.'):
+    '''
+    Takes a tuple of strings and joins them using sep (defaults to '.').
+    '''
+    if sep == '.':
+        return tupleToDottedString(tuple_string)
+    else:
+        return str_join(sep, tuple_string)
+
+def t2cds(tuple_strings, macrosep=',', microsep='.'):
+    '''
+    Takes a tuple of (sub)tuples of strings and returns a single string with each
+    (sub)tuple separated by macrosep (default=',') and each string within a (sub)tuple
+    separated by microsep (default='.')
+    '''
+    return t2ds(tuple(map(partial(t2ds, sep=microsep), 
+                          tuple_strings)), sep=macrosep)
+
+def ds2t(s, macrosep=',', microsep='.', flatten=False):
+    '''
+    Takes a (comma- and) dot-separated string s and returns a tupled version.
+    
+    If s contains no commas (macrosep tokens), this returns a tuple of the strings separated
+    by dots (microsep).
+    
+    If s contains commas (macroseps), this returns a tuple of (sub)tuples of strings.
+    
+    If s contains commas (macroseps), this returns a single flattened tuple of strings.
+    '''
+    if ',' not in s:
+        return dottedStringToTuple(s)
+    if not flatten:
+        return tuple(map(partial(ds2t, macrosep=macrosep, microsep=microsep, flatten=flatten), 
+                         s.split(macrosep)))
+    else:
+        return tuple(lflatten(tuple(map(dottedStringToTuple,
+                                        s.split(macrosep)))))
+    
+def cds2tds(s, macrosep=',', microsep='.'):
+    '''
+    Takes a comma and dot-separated string s and returns a tuple of dot- (=microsep-) separated
+    strings.
+    '''
+    return tuple(map(partial(t2ds, sep=microsep), 
+                     ds2t(s, macrosep=macrosep, microsep=microsep)))
+    
+# t2ds = tupleToDottedString
+# ds2t = dottedStringToTuple
 
 def coerceDStoLength(ds, l, padChar='?'):
     s_t = ds2t(ds)
@@ -124,6 +176,8 @@ def trimBoundariesFromSequence(seq):
         temp = temp[1:]
     if len(temp) < 1:
         return tupleToDottedString(tuple(temp))
+    if temp[-1] == rightEdge:
+        temp = temp[:-1]
     if temp[-1] == rightEdge:
         temp = temp[:-1]
     return tupleToDottedString(tuple(temp))
