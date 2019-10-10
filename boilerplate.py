@@ -547,13 +547,30 @@ def oneHotToSeqMap(seqs):
     corresponding element of S.
     '''
     sorted_seqs = sorted(seqs)
-    seqsToOHmap = seqsToOneHotMap(seqs)
-    seqsToOHmap_t = mapValues(tuple, seqsToOHmap)
-    OHtoSeqs = dict(map(rev, seqsToOHmap_t.items()))
+#     seqsToOHmap = seqsToOneHotMap(seqs)
+#     seqsToOHmap_t = mapValues(tuple, seqsToOHmap)
+#     OHtoSeqs = dict(map(rev, seqsToOHmap_t.items()))
     def OHtoSeq(OH_vector):
-        OH_t = tuple(OH_vector)
-        return OHtoSeqs[OH_t]
+        seq_idx = OH_vector.nonzero()[0].item()
+        return sorted_seqs[seq_idx]
+#         OH_t = tuple(OH_vector)
+#         return OHtoSeqs[OH_t]
     return OHtoSeq
+
+# def oneHotToSeqMap(seqs):
+#     '''
+#     Given a collection (of sequences) S, this function
+#     returns a function mapping a one-hot vector to its
+#     corresponding element of S.
+#     '''
+#     sorted_seqs = sorted(seqs)
+#     seqsToOHmap = seqsToOneHotMap(seqs)
+#     seqsToOHmap_t = mapValues(tuple, seqsToOHmap)
+#     OHtoSeqs = dict(map(rev, seqsToOHmap_t.items()))
+#     def OHtoSeq(OH_vector):
+#         OH_t = tuple(OH_vector)
+#         return OHtoSeqs[OH_t]
+#     return OHtoSeq
 
 def seqStackToIndexStack(seqStack, seqToIndexMap):
     '''
@@ -630,13 +647,21 @@ def memDiff(m0, m1):
 
 
 # from time import localtime, strftime
-def stamp():
+def stamp(include_date=False):
+    if include_date:
+        return strftime('%Y-%m-%d %H:%M:%S', localtime())
     return strftime('%H:%M:%S', localtime())
 
-def stampedNote(note, printResult=True, returnResult=False):
+def stampedNote(note, printResult=True, returnResult=False, log_fp=None, log_f=None):
     result = '{0} @ {1}'.format(note, stamp())
     if printResult:
-        print(result)
+        if log_fp is None and log_f is None:
+            print(result)
+        elif log_f is not None:
+            print(result, file=log_f)
+        else:
+            with open(log_fp, 'a') as f:
+                print(result, file=f)
     if returnResult:
         return result
        
@@ -652,37 +677,55 @@ def endNote(note=None):
     stampedNote('End ' + note)
 
 def timeDiff(t0_string, t1_string, asSeconds=True):
-    FMT = '%H:%M:%S'
-    tDelta = datetime.strptime(t1_string, FMT) - datetime.strptime(t0_string, FMT)
+    if '-' not in t0_string and '-' not in t1_string:
+        FMT = '%H:%M:%S'
+        tDelta = datetime.strptime(t1_string, FMT) - datetime.strptime(t0_string, FMT)
+    elif '-' in t0_string and '-' in t1_string:
+        FMT = '%Y-%m-%d %H:%M:%S'
+        tDelta = datetime.strptime(t1_string, FMT) - datetime.strptime(t0_string, FMT)
+    else:
+        raise Exception('Either both date-time strings should include times AND dates or just times')
     if not asSeconds:
         return tDelta
     return tDelta.total_seconds()
 
-def stampedMemNote(msg='', units='GB', includeGPU=False, printResult=True, returnResult=False):
+def stampedMemNote(msg='', units='GB', includeGPU=False, printResult=True, returnResult=False, log_fp=None, log_f=None):
     mem_usage = 'VM used vs. available: {0:.2f}{2} vs. {1:.2f}{2}'.format(memUsed(units), memAvailable(units), units)
-    if g and includeGPU:
+    if includeGPU:
 #         g_info = gpuMem()
 #         total, alloc, cached = g_info['total'], g_info['allocated'], g_info['cached']
 #         gpu_usage = 'GPU mem allocated, cached, total: {0:.2f}MB vs. {1:.2f}MB vs. {1:.2f}MB'.format(alloc, cached, total)
         pass
     if msg == '':
         if returnResult:
-            return stampedNote(mem_usage, printResult=printResult, returnResult=returnResult)
+            return stampedNote(mem_usage, printResult=printResult, returnResult=returnResult, log_fp=log_fp, log_f=log_f)
         else:
-            stampedNote(mem_usage, printResult=printResult, returnResult=returnResult)
+            stampedNote(mem_usage, printResult=printResult, returnResult=returnResult, log_fp=log_fp, log_f=log_f)
 #         if g and includeGPU:
 #             print(gpu_usage)
         
     if returnResult:
-        stamped_msg = stampedNote(msg, printResult=printResult, returnResult=returnResult)
+        stamped_msg = stampedNote(msg, printResult=printResult, returnResult=returnResult, log_fp=log_fp, log_f=log_f)
         mem_msg = '\t'+mem_usage
         if printResult:
-            print(mem_msg)
+            if log_fp is None and log_f is None:
+                print(mem_msg)
+            elif log_f is not None:
+                print(mem_msg, file=log_f)
+            else:
+                with open(log_fp, 'a') as f:
+                    print(mem_msg, file=f)
         total_msg = stamped_msg + '\n' + mem_msg
         return total_msg
     else:
-        stampedNote(msg, printResult=printResult, returnResult=returnResult)
-        print('\t'+mem_usage)
+        stampedNote(msg, printResult=printResult, returnResult=returnResult, log_fp=log_fp, log_f=log_f)
+        if log_fp is None and log_f is None:
+            print('\t'+mem_usage)
+        elif log_f is not None:
+            print('\t'+mem_usage, file=log_f)
+        else:
+            with open(log_fp, 'a') as f:
+                print('\t'+mem_usage, file=f)
     
     
 def processDataWProgressUpdates(f, data):
