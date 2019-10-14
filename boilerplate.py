@@ -376,12 +376,12 @@ def ensure_dir_exists(dir_path):
 def exists(fname):
     return os.path.isfile(fname)
 
-def loadTSV_as_dictlist(fp):
+def loadTSV_as_dictlist(fp, fieldnames=None):
     rows = []
 
     with open(fp) as csvfile:
         #quoting and quotechar args here are for dealing with the CMU dictionary
-        my_reader = csv.DictReader(csvfile, delimiter='\t', quoting=csv.QUOTE_NONE, quotechar='@')
+        my_reader = csv.DictReader(csvfile, fieldnames=fieldnames, delimiter='\t', quoting=csv.QUOTE_NONE, quotechar='@')
         for row in my_reader:
             #print(row)
             rows.append(row)
