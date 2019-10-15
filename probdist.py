@@ -600,7 +600,7 @@ def condDistFamilyToNP(pOutIn):
     pOutIn_np = pOutIn_np.T
     return pOutIn_np
 
-def condDistNPtoCondProbDist(pOutIn_np, conditionToIndexMap=None, indexToConditionMap=None, outcomeToIndexMap=None, indexToOutcomeMap=None):
+def condDistNPtoCondProbDist(pOutIn_np, conditionToIndexMap=None, indexToConditionMap=None, outcomeToIndexMap=None, indexToOutcomeMap=None, condition_axis=0):
     assert not (conditionToIndexMap is None) and (indexToConditionMap is None)
     assert not (outcomeToIndexMap is None) and (indexToOutcomeMap is None)
     
@@ -615,9 +615,16 @@ def condDistNPtoCondProbDist(pOutIn_np, conditionToIndexMap=None, indexToConditi
     else:
         Os = set(outcomeToIndexMap.keys())
     
-    pOutIn = {c:ProbDist({o:pOutIn_np[conditionToIndexMap[c]][outcomeToIndexMap[o]]
-                          for o in Os})
-              for c in Cs}
+    if condition_axis == 0:
+        pOutIn = {c:ProbDist({o:pOutIn_np[conditionToIndexMap[c]][outcomeToIndexMap[o]]
+                              for o in Os})
+                  for c in Cs}
+    elif condition_axis == 1:
+        pOutIn = {c:ProbDist({o:pOutIn_np[outcomeToIndexMap[o]][conditionToIndexMap[c]]
+                              for o in Os})
+                  for c in Cs}
+    else:
+        raise Exception(f'condition axis must be either 0 or 1, got {condition_axis} instead')
     return pOutIn
 
 def testNPcondDist(pOutIn_np, inMap, outMap, pOutIn):
