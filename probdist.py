@@ -290,9 +290,16 @@ def MarginalProbDist(cd, prior):
 #     assert np.isclose(conditionNorm, 1.0), "Sum of probabilities (according to the prior) of conditioning events in cd must be 1, but instead = {0}".format(conditionNorm)
     
     O = outcomes(cd)
-    return ProbDist({o:sum(prior[c] * cd[c][o]
-                           for c in prior)
-                     for o in O})
+    uo = uniformOutcomes(cd)
+    if uo is True:
+        return ProbDist({o:sum(prior[c] * cd[c][o]
+                               for c in prior)
+                         for o in O})
+    else:
+        O = join(uo)
+        return ProbDist({o:sum(prior[c] * cd[c][o]
+                               for c in prior)
+                         for o in O})
 
 # from math import log2
 
