@@ -14,7 +14,7 @@ The main driver notebook has much more detail.
 
 ## Setup
 
-**A brief note on hardware:** As noted in more granular detail elsewhere, much of the code in this repository is developed on research servers with 60-200 GB of RAM and a GPU. 
+**A brief note on hardware:** As noted in more granular detail elsewhere, much of the code in this repository is developed on research servers with 60-200 GB of RAM, a GPU, and ≈1TB available for (completely uncompressed) generated data.
 All code has been developed on/for a *nix-like OS.
 As a general rule, processing steps earlier in the pipeline (especially focused on the noise model) are more likely to be feasible or require less adaptation for leaner hardware.
 
