@@ -1,6 +1,6 @@
 # wr
 
-This repository contains code for creating a model of the posterior confusability of words given a language model and gating data that can be used to define a confusability model. 
+This repository contains code for creating a model of the posterior confusability of words given (1) a language model and (2) diphone gating data that can be used to define a noise model.
 See [Meinhardt et al (2020)](https://www.aclweb.org/anthology/2020.acl-main.180.pdf) for more on the context of application and exposition of the mathematical model.
 
 ## Architecture Overview
